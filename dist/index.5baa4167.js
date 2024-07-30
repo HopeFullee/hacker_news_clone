@@ -142,7 +142,7 @@
       this[globalName] = mainExports;
     }
   }
-})({"hPIHA":[function(require,module,exports) {
+})({"85Ib5":[function(require,module,exports) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
@@ -584,7 +584,19 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 }
 
 },{}],"igcvL":[function(require,module,exports) {
+const ajax = new XMLHttpRequest();
+ajax.open("GET", "https://api.hnpwa.com/v0/news/1.json", false);
+ajax.send();
+const res = ajax.response;
+const newsFeed = JSON.parse(res);
+const ul = document.createElement("ul");
+const titleList = newsFeed.forEach(({ title }, idx)=>{
+    const li = document.createElement("li");
+    li.innerHTML = title;
+    ul.appendChild(li);
+});
+document.getElementById("root").appendChild(ul);
 
-},{}]},["hPIHA","igcvL"], "igcvL", "parcelRequire94c2")
+},{}]},["85Ib5","igcvL"], "igcvL", "parcelRequire94c2")
 
 //# sourceMappingURL=index.5baa4167.js.map
