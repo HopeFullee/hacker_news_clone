@@ -1,5 +1,4 @@
 const rootContainer = document.getElementById("root");
-const contentDiv = document.createElement("div");
 
 const ajax = new XMLHttpRequest();
 const NEWS_URL = "https://api.hnpwa.com/v0/news/1.json";
@@ -12,32 +11,44 @@ const getData = (url) => {
   return JSON.parse(ajax.response);
 };
 
-const newsFeed = getData(NEWS_URL);
-const ul = document.createElement("ul");
+const newsFeed = () => {
+  const newsFeed = getData(NEWS_URL);
 
-window.addEventListener("hashchange", () => {
+  rootContainer.innerHTML = `
+  <ul>
+    ${newsFeed
+      .map(({ id, title, comments_count }, idx) => {
+        return `
+        <li>
+          <a href="#${id}">${title} ${comments_count}</a>
+        </li>
+        `;
+      })
+      .join("")}
+  </ul>
+`;
+};
+
+const newsDetail = () => {
   const id = location.hash.substring(1);
 
   const newsContent = getData(NEWS_CONTENT_URL.replace("@id", id));
-  console.log(newsContent);
 
-  const title = document.createElement("h1");
-  title.innerHTML = newsContent.title;
-
-  contentDiv.appendChild(title);
-});
-
-newsFeed.forEach(({ id, title, comments_count }, idx) => {
-  const div = document.createElement("div");
-
-  div.innerHTML = `
-    <li>
-      <a href="#${id}">${title} ${comments_count}</a>
-    </li>
+  rootContainer.innerHTML = `
+    <h1>${newsContent ? newsContent.title : "게시글이 없습니다"}</h1>
+    <div>
+      <a href='#'>목록으로</a>
+    </div>
   `;
+};
 
-  ul.appendChild(div.firstElementChild);
-});
+const router = () => {
+  const currHashPath = location.hash;
 
-rootContainer.appendChild(ul);
-rootContainer.appendChild(contentDiv);
+  if (currHashPath !== "") newsDetail();
+  else newsFeed();
+};
+
+window.addEventListener("hashchange", router);
+
+router();

@@ -585,7 +585,6 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 
 },{}],"igcvL":[function(require,module,exports) {
 const rootContainer = document.getElementById("root");
-const contentDiv = document.createElement("div");
 const ajax = new XMLHttpRequest();
 const NEWS_URL = "https://api.hnpwa.com/v0/news/1.json";
 const NEWS_CONTENT_URL = "https://api.hnpwa.com/v0/item/@id.json";
@@ -594,27 +593,37 @@ const getData = (url)=>{
     ajax.send();
     return JSON.parse(ajax.response);
 };
-const newsFeed = getData(NEWS_URL);
-const ul = document.createElement("ul");
-window.addEventListener("hashchange", ()=>{
+const newsFeed = ()=>{
+    const newsFeed = getData(NEWS_URL);
+    rootContainer.innerHTML = `
+  <ul>
+    ${newsFeed.map(({ id, title, comments_count }, idx)=>{
+        return `
+        <li>
+          <a href="#${id}">${title} ${comments_count}</a>
+        </li>
+        `;
+    }).join("")}
+  </ul>
+`;
+};
+const newsDetail = ()=>{
     const id = location.hash.substring(1);
     const newsContent = getData(NEWS_CONTENT_URL.replace("@id", id));
-    console.log(newsContent);
-    const title = document.createElement("h1");
-    title.innerHTML = newsContent.title;
-    contentDiv.appendChild(title);
-});
-newsFeed.forEach(({ id, title, comments_count }, idx)=>{
-    const div = document.createElement("div");
-    div.innerHTML = `
-    <li>
-      <a href="#${id}">${title} ${comments_count}</a>
-    </li>
+    rootContainer.innerHTML = `
+    <h1>${newsContent ? newsContent.title : "\uAC8C\uC2DC\uAE00\uC774 \uC5C6\uC2B5\uB2C8\uB2E4"}</h1>
+    <div>
+      <a href='#'>\u{BAA9}\u{B85D}\u{C73C}\u{B85C}</a>
+    </div>
   `;
-    ul.appendChild(div.firstElementChild);
-});
-rootContainer.appendChild(ul);
-rootContainer.appendChild(contentDiv);
+};
+const router = ()=>{
+    const currHashPath = location.hash;
+    if (currHashPath !== "") newsDetail();
+    else newsFeed();
+};
+window.addEventListener("hashchange", router);
+router();
 
 },{}]},["85Ib5","igcvL"], "igcvL", "parcelRequire94c2")
 
