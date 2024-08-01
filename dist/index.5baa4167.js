@@ -588,6 +588,9 @@ const rootContainer = document.getElementById("root");
 const ajax = new XMLHttpRequest();
 const NEWS_URL = "https://api.hnpwa.com/v0/news/1.json";
 const NEWS_CONTENT_URL = "https://api.hnpwa.com/v0/item/@id.json";
+const store = {
+    currentPage: 1
+};
 const getData = (url)=>{
     ajax.open("GET", url, false);
     ajax.send();
@@ -598,29 +601,36 @@ const newsFeed = ()=>{
     rootContainer.innerHTML = `
   <ul>
     ${newsFeed.map(({ id, title, comments_count }, idx)=>{
-        return `
+        if (idx + 1 > (store.currentPage - 1) * 10 && idx < store.currentPage * 10) return `
         <li>
-          <a href="#${id}">${title} ${comments_count}</a>
+          <a href="#/news/${id}">${title} (${comments_count})</a>
         </li>
         `;
     }).join("")}
   </ul>
+  <div>
+      <a href='#/page/${store.currentPage > 1 ? store.currentPage - 1 : 1}'>\u{C774}\u{C804} \u{D398}\u{C774}\u{C9C0}</a>
+      <a href='#/page/${store.currentPage < newsFeed.length / 10 ? store.currentPage + 1 : newsFeed.length / 10}'>\u{B2E4}\u{C74C} \u{D398}\u{C774}\u{C9C0}</a>
+  </div>
 `;
 };
 const newsDetail = ()=>{
-    const id = location.hash.substring(1);
+    const id = location.hash.replace("#/news/", "");
     const newsContent = getData(NEWS_CONTENT_URL.replace("@id", id));
     rootContainer.innerHTML = `
     <h1>${newsContent ? newsContent.title : "\uAC8C\uC2DC\uAE00\uC774 \uC5C6\uC2B5\uB2C8\uB2E4"}</h1>
     <div>
-      <a href='#'>\u{BAA9}\u{B85D}\u{C73C}\u{B85C}</a>
+      <a href='#/page/${store.currentPage}'>\u{BAA9}\u{B85D}\u{C73C}\u{B85C}</a>
     </div>
   `;
 };
 const router = ()=>{
     const currHashPath = location.hash;
-    if (currHashPath !== "") newsDetail();
-    else newsFeed();
+    if (currHashPath === "") newsFeed();
+    else if (currHashPath.indexOf("#/page/") >= 0) {
+        store.currentPage = Number(currHashPath.replace("#/page/", ""));
+        newsFeed();
+    } else newsDetail();
 };
 window.addEventListener("hashchange", router);
 router();

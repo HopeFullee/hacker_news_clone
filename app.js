@@ -4,6 +4,10 @@ const ajax = new XMLHttpRequest();
 const NEWS_URL = "https://api.hnpwa.com/v0/news/1.json";
 const NEWS_CONTENT_URL = "https://api.hnpwa.com/v0/item/@id.json";
 
+const store = {
+  currentPage: 1,
+};
+
 const getData = (url) => {
   ajax.open("GET", url, false);
   ajax.send();
@@ -18,26 +22,40 @@ const newsFeed = () => {
   <ul>
     ${newsFeed
       .map(({ id, title, comments_count }, idx) => {
-        return `
+        if (
+          idx + 1 > (store.currentPage - 1) * 10 &&
+          idx < store.currentPage * 10
+        )
+          return `
         <li>
-          <a href="#${id}">${title} ${comments_count}</a>
+          <a href="#/news/${id}">${title} (${comments_count})</a>
         </li>
         `;
       })
       .join("")}
   </ul>
+  <div>
+      <a href='#/page/${
+        store.currentPage > 1 ? store.currentPage - 1 : 1
+      }'>이전 페이지</a>
+      <a href='#/page/${
+        store.currentPage < newsFeed.length / 10
+          ? store.currentPage + 1
+          : newsFeed.length / 10
+      }'>다음 페이지</a>
+  </div>
 `;
 };
 
 const newsDetail = () => {
-  const id = location.hash.substring(1);
+  const id = location.hash.replace("#/news/", "");
 
   const newsContent = getData(NEWS_CONTENT_URL.replace("@id", id));
 
   rootContainer.innerHTML = `
     <h1>${newsContent ? newsContent.title : "게시글이 없습니다"}</h1>
     <div>
-      <a href='#'>목록으로</a>
+      <a href='#/page/${store.currentPage}'>목록으로</a>
     </div>
   `;
 };
@@ -45,8 +63,11 @@ const newsDetail = () => {
 const router = () => {
   const currHashPath = location.hash;
 
-  if (currHashPath !== "") newsDetail();
-  else newsFeed();
+  if (currHashPath === "") newsFeed();
+  else if (currHashPath.indexOf("#/page/") >= 0) {
+    store.currentPage = Number(currHashPath.replace("#/page/", ""));
+    newsFeed();
+  } else newsDetail();
 };
 
 window.addEventListener("hashchange", router);
