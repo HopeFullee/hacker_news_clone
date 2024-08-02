@@ -598,21 +598,29 @@ const getData = (url)=>{
 };
 const newsFeed = ()=>{
     const newsFeed = getData(NEWS_URL);
-    rootContainer.innerHTML = `
-  <ul>
-    ${newsFeed.map(({ id, title, comments_count }, idx)=>{
+    let template = `
+    <div class="max-w-[1200px] mx-auto pt-[100px]">
+      <h1>Hacker News</h1>
+      <ul>
+        {{__news_feed__}}
+      </ul>
+      <div>
+        <a href="#/page/{{__prev_page__}}">\u{C774}\u{C804} \u{D398}\u{C774}\u{C9C0}</a>
+        <a href="#/page/{{__next_page__}}">\u{B2E4}\u{C74C} \u{D398}\u{C774}\u{C9C0}</a>
+      </div>
+    </div>
+  `;
+    const newsList = newsFeed.map(({ id, title, comments_count }, idx)=>{
         if (idx + 1 > (store.currentPage - 1) * 10 && idx < store.currentPage * 10) return `
-        <li>
-          <a href="#/news/${id}">${title} (${comments_count})</a>
-        </li>
+          <li>
+            <a href="#/news/${id}">${title} (${comments_count})</a>
+          </li>
         `;
-    }).join("")}
-  </ul>
-  <div>
-      <a href='#/page/${store.currentPage > 1 ? store.currentPage - 1 : 1}'>\u{C774}\u{C804} \u{D398}\u{C774}\u{C9C0}</a>
-      <a href='#/page/${store.currentPage < newsFeed.length / 10 ? store.currentPage + 1 : newsFeed.length / 10}'>\u{B2E4}\u{C74C} \u{D398}\u{C774}\u{C9C0}</a>
-  </div>
-`;
+    });
+    template = template.replace("{{__news_feed__}}", newsList.join(""));
+    template = template.replace("{{__prev_page__}}", store.currentPage > 1 ? store.currentPage - 1 : 1);
+    template = template.replace("{{__next_page__}}", store.currentPage < newsFeed.length / 10 ? store.currentPage + 1 : newsFeed.length / 10);
+    rootContainer.innerHTML = template;
 };
 const newsDetail = ()=>{
     const id = location.hash.replace("#/news/", "");
