@@ -589,15 +589,21 @@ const ajax = new XMLHttpRequest();
 const NEWS_URL = "https://api.hnpwa.com/v0/news/1.json";
 const NEWS_CONTENT_URL = "https://api.hnpwa.com/v0/item/@id.json";
 const store = {
-    currentPage: 1
+    currentPage: 1,
+    feeds: []
 };
 const getData = (url)=>{
     ajax.open("GET", url, false);
     ajax.send();
     return JSON.parse(ajax.response);
 };
+const createFeed = (newsData)=>{
+    newsData.forEach((feeds)=>{
+        feeds.read = false;
+    });
+    return newsData;
+};
 const newsFeed = ()=>{
-    const newsFeed = getData(NEWS_URL);
     let template = `
     <div class="bg-gray-600 min-h-screen">
       <div class="bg-white text-xl">
@@ -622,9 +628,10 @@ const newsFeed = ()=>{
       </div>
     </div>
   `;
-    const newsList = newsFeed.map(({ id, title, user, points, time_ago, comments_count }, idx)=>{
+    if (store.feeds.length === 0) store.feeds = createFeed(getData(NEWS_URL));
+    const newsList = store.feeds.map(({ id, title, user, points, time_ago, comments_count, read }, idx)=>{
         if (idx + 1 > (store.currentPage - 1) * 10 && idx < store.currentPage * 10) return `
-          <div class="p-6 bg-white mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
+          <div class="p-6 ${read ? "bg-green-500" : "bg-white"} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
             <div class="flex">
               <div class="flex-auto">
                 <a href="#/news/${id}">${title}</a>  
@@ -677,6 +684,9 @@ const newsDetail = ()=>{
       </div>
     </div>
   `;
+    store.feeds.forEach((feeds)=>{
+        if (feeds.id === Number(id)) feeds.read = true;
+    });
     const displayComment = (comments, called = 0)=>{
         const commentList = [];
         comments.forEach(({ user, time_ago, content, comments })=>{
