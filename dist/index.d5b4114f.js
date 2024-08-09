@@ -654,8 +654,8 @@ const newsFeed = ()=>{
         `;
     });
     template = template.replace("{{__news_feed__}}", newsList.join(""));
-    template = template.replace("{{__prev_page__}}", store.currentPage > 1 ? (store.currentPage - 1).toString() : "1");
-    template = template.replace("{{__next_page__}}", store.currentPage < store.feeds.length / 10 ? (store.currentPage + 1).toString() : (store.feeds.length / 10).toString());
+    template = template.replace("{{__prev_page__}}", (store.currentPage > 1 ? store.currentPage - 1 : 1).toString());
+    template = template.replace("{{__next_page__}}", (store.currentPage < store.feeds.length / 10 ? store.currentPage + 1 : store.feeds.length / 10).toString());
     updateView(template);
 };
 const newsDetail = ()=>{
@@ -690,24 +690,24 @@ const newsDetail = ()=>{
     store.feeds.forEach((feeds)=>{
         if (feeds.id === Number(id)) feeds.read = true;
     });
-    const displayComment = (comments, called = 0)=>{
-        const commentList = [];
-        comments.forEach(({ user, time_ago, content, comments })=>{
-            commentList.push(`
-        <div style="padding-left: ${called * 40}px" class="mt-4">
-          <div class="text-gray-400">
-            <i class="fa fa-sort-up mr-2"></i>
-            <strong>${user}</strong> ${time_ago}
-          </div>
-          <p class="text-gray-700 break-all">${content}</p>
-        </div>  
-        `);
-            if (comments.length > 0) commentList.push(displayComment(comments, called + 1));
-        });
-        return commentList.join("");
-    };
     template = template.replace("{{__comments__}}", displayComment(newsContent.comments));
     updateView(template);
+};
+const displayComment = (comments)=>{
+    const commentList = [];
+    comments.forEach(({ user, time_ago, content, comments, level })=>{
+        commentList.push(`
+      <div style="padding-left: ${level * 40}px" class="mt-4">
+        <div class="text-gray-400">
+          <i class="fa fa-sort-up mr-2"></i>
+          <strong>${user}</strong> ${time_ago}
+        </div>
+        <p class="text-gray-700 break-all">${content}</p>
+      </div>  
+      `);
+        if (comments.length > 0) commentList.push(displayComment(comments));
+    });
+    return commentList.join("");
 };
 const router = ()=>{
     const currHashPath = location.hash;
