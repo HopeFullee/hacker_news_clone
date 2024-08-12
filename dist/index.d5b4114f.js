@@ -592,11 +592,38 @@ const store = {
     currentPage: 1,
     feeds: []
 };
-const getData = (url)=>{
-    ajax.open("GET", url, false);
-    ajax.send();
-    return JSON.parse(ajax.response);
+const applyApiMixins = (targetClass, baseClasses)=>{
+    baseClasses.forEach((baseClass)=>{
+        Object.getOwnPropertyNames(baseClass.prototype).forEach((name)=>{
+            const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
+            if (descriptor) Object.defineProperty(targetClass.prototype, name, descriptor);
+        });
+    });
 };
+class Api {
+    getRequest(url) {
+        const ajax = new XMLHttpRequest();
+        ajax.open("GET", url, false);
+        ajax.send();
+        return JSON.parse(ajax.response);
+    }
+}
+class NewsFeedApi {
+    getData() {
+        return this.getRequest(NEWS_URL);
+    }
+}
+class NewsDetailApi {
+    getData(id) {
+        return this.getRequest(NEWS_CONTENT_URL.replace("@id", id));
+    }
+}
+applyApiMixins(NewsFeedApi, [
+    Api
+]);
+applyApiMixins(NewsDetailApi, [
+    Api
+]);
 const createFeed = (newsData)=>{
     newsData.forEach((feeds)=>{
         feeds.read = false;
@@ -607,6 +634,7 @@ const updateView = (html)=>{
     if (rootContainer) rootContainer.innerHTML = html;
 };
 const newsFeed = ()=>{
+    const api = new NewsFeedApi();
     let template = `
     <div class="bg-gray-600 min-h-screen">
       <div class="bg-white text-xl">
@@ -631,7 +659,7 @@ const newsFeed = ()=>{
       </div>
     </div>
   `;
-    if (store.feeds.length === 0) store.feeds = createFeed(getData(NEWS_URL));
+    if (store.feeds.length === 0) store.feeds = createFeed(api.getData());
     const newsList = store.feeds.map(({ id, title, user, points, time_ago, comments_count, read }, idx)=>{
         if (idx + 1 > (store.currentPage - 1) * 10 && idx < store.currentPage * 10) return `
           <div class="p-6 ${read ? "bg-green-500" : "bg-white"} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
@@ -660,7 +688,8 @@ const newsFeed = ()=>{
 };
 const newsDetail = ()=>{
     const id = location.hash.replace("#/news/", "");
-    const newsContent = getData(NEWS_CONTENT_URL.replace("@id", id));
+    const api = new NewsDetailApi();
+    const newsContent = api.getData(id);
     let template = `
     <div class="bg-gray-600 min-h-screen pb-8">
       <div class="bg-white text-xl">
