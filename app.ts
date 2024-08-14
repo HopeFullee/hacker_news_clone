@@ -42,65 +42,81 @@ const store: StoreType = {
   feeds: [],
 };
 
-const applyApiMixins = (targetClass: any, baseClasses: any[]) => {
-  baseClasses.forEach((baseClass) => {
-    Object.getOwnPropertyNames(baseClass.prototype).forEach((name) => {
-      const descriptor = Object.getOwnPropertyDescriptor(
-        baseClass.prototype,
-        name
-      );
-
-      if (descriptor) {
-        Object.defineProperty(targetClass.prototype, name, descriptor);
-      }
-    });
-  });
-};
-
 class Api {
-  getRequest<AjaxResponse>(url: string): AjaxResponse {
-    const ajax = new XMLHttpRequest();
-    ajax.open("GET", url, false);
-    ajax.send();
+  url: string;
+  ajax: XMLHttpRequest;
 
-    return JSON.parse(ajax.response);
+  constructor(url: string) {
+    this.url = url;
+    this.ajax = new XMLHttpRequest();
+  }
+
+  protected getRequest<AjaxResponse>(): AjaxResponse {
+    this.ajax.open("GET", this.url, false);
+    this.ajax.send();
+
+    return JSON.parse(this.ajax.response);
   }
 }
 
-class NewsFeedApi {
+class NewsFeedApi extends Api {
   getData(): NewsFeed[] {
-    return this.getRequest<NewsFeed[]>(NEWS_URL);
+    return this.getRequest<NewsFeed[]>();
   }
 }
 
-class NewsDetailApi {
-  getData(id: string): NewsDetail {
-    return this.getRequest<NewsDetail>(NEWS_CONTENT_URL.replace("@id", id));
+class NewsDetailApi extends Api {
+  getData(): NewsDetail {
+    return this.getRequest<NewsDetail>();
   }
 }
 
-interface NewsFeedApi extends Api {}
-interface NewsDetailApi extends Api {}
+class View {
+  template: string;
+  renderTemplate: string;
+  container: HTMLElement;
+  htmlList: string[];
 
-applyApiMixins(NewsFeedApi, [Api]);
-applyApiMixins(NewsDetailApi, [Api]);
+  constructor(containerId: string, template: string) {
+    const containerEl = document.getElementById(containerId);
 
-const createFeed = (newsData: NewsFeed[]) => {
-  newsData.forEach((feeds) => {
-    feeds.read = false;
-  });
+    if (!containerEl) throw "최상위 컨테이너가 없어 UI를 진행하지 못합니다.";
 
-  return newsData;
-};
+    this.container = containerEl;
+    this.template = template;
+    this.renderTemplate = template;
+    this.htmlList = [];
+  }
 
-const updateView = (html: string) => {
-  if (rootContainer) rootContainer.innerHTML = html;
-};
+  updateView = () => {
+    this.container.innerHTML = this.renderTemplate;
+    this.renderTemplate = this.template;
+  };
 
-const newsFeed = () => {
-  const api = new NewsFeedApi();
+  addHtml(htmlString: string) {
+    this.htmlList.push(htmlString);
+  }
 
-  let template = `
+  getHtml() {
+    const snapshot = this.htmlList.join("");
+    this.clearHtmlList();
+    return snapshot;
+  }
+
+  setTemplateData(key: string, val: string) {
+    this.renderTemplate = this.renderTemplate.replace(`{{__${key}__}}`, val);
+  }
+
+  clearHtmlList() {
+    this.htmlList = [];
+  }
+}
+
+class NewsFeedView extends View {
+  api: NewsFeedApi;
+
+  constructor(containerId: string) {
+    let template = `
     <div class="bg-gray-600 min-h-screen">
       <div class="bg-white text-xl">
         <div class="mx-auto px-4">
@@ -125,17 +141,23 @@ const newsFeed = () => {
     </div>
   `;
 
-  if (store.feeds.length === 0) {
-    store.feeds = createFeed(api.getData());
+    super(containerId, template);
+    this.api = new NewsFeedApi(NEWS_URL);
+
+    if (store.feeds.length === 0) {
+      store.feeds = this.api.getData();
+      this.createFeeds();
+    }
   }
 
-  const newsList = store.feeds.map(
-    ({ id, title, user, points, time_ago, comments_count, read }, idx) => {
-      if (
-        idx + 1 > (store.currentPage - 1) * 10 &&
-        idx < store.currentPage * 10
-      )
-        return `
+  render() {
+    store.feeds.forEach(
+      ({ id, title, user, points, time_ago, comments_count, read }, idx) => {
+        if (
+          idx + 1 > (store.currentPage - 1) * 10 &&
+          idx < store.currentPage * 10
+        )
+          this.addHtml(`
           <div class="p-6 ${
             read ? "bg-green-500" : "bg-white"
           } mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
@@ -155,93 +177,106 @@ const newsFeed = () => {
               </div>  
             </div>
           </div>    
-        `;
-    }
-  );
+        `);
+      }
+    );
 
-  template = template.replace("{{__news_feed__}}", newsList.join(""));
-  template = template.replace(
-    "{{__prev_page__}}",
-    (store.currentPage > 1 ? store.currentPage - 1 : 1).toString()
-  );
-  template = template.replace(
-    "{{__next_page__}}",
-    (store.currentPage < store.feeds.length / 10
-      ? store.currentPage + 1
-      : store.feeds.length / 10
-    ).toString()
-  );
+    this.setTemplateData("news_feed", this.getHtml());
+    this.setTemplateData(
+      "prev_page",
+      (store.currentPage > 1 ? store.currentPage - 1 : 1).toString()
+    );
+    this.setTemplateData(
+      "next_page",
+      (store.currentPage < store.feeds.length / 10
+        ? store.currentPage + 1
+        : store.feeds.length / 10
+      ).toString()
+    );
 
-  updateView(template);
-};
+    this.updateView();
+  }
 
-const newsDetail = () => {
-  const id = location.hash.replace("#/news/", "");
-  const api = new NewsDetailApi();
-  const newsContent = api.getData(id);
+  createFeeds = () => {
+    store.feeds.forEach((feeds) => {
+      feeds.read = false;
+    });
 
-  let template = `
-    <div class="bg-gray-600 min-h-screen pb-8">
-      <div class="bg-white text-xl">
-        <div class="mx-auto px-4">
-          <div class="flex justify-between items-center py-6">
-            <div class="flex justify-start">
-              <h1 class="font-extrabold">Hacker News</h1>
-            </div>
-            <div class="items-center justify-end">
-              <a href="#/page/${store.currentPage}" class="text-gray-500">
-                <i class="fa fa-times"></i>
-              </a>
+    return store.feeds;
+  };
+}
+
+class NewsDetailView extends View {
+  constructor(containerId: string) {
+    let template = `
+      <div class="bg-gray-600 min-h-screen pb-8">
+        <div class="bg-white text-xl">
+          <div class="mx-auto px-4">
+            <div class="flex justify-between items-center py-6">
+              <div class="flex justify-start">
+                <h1 class="font-extrabold">Hacker News</h1>
+              </div>
+              <div class="items-center justify-end">
+                <a href="#/page/{{__currentPage__}}" class="text-gray-500">
+                  <i class="fa fa-times"></i>
+                </a>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="h-full border rounded-xl bg-white m-6 p-4 ">
-        <h2>${newsContent.title}</h2>
-        <div class="text-gray-400 h-20">
-          ${newsContent.content}
+  
+        <div class="h-full border rounded-xl bg-white m-6 p-4 ">
+          <h2>{{__title__}}</h2>
+          <div class="text-gray-400 h-20">
+            {{__content__}}
+          </div>
+          {{__comments__}}
         </div>
-        {{__comments__}}
       </div>
-    </div>
-  `;
+    `;
 
-  store.feeds.forEach((feeds) => {
-    if (feeds.id === Number(id)) {
-      feeds.read = true;
-    }
-  });
+    super(containerId, template);
+  }
 
-  template = template.replace(
-    "{{__comments__}}",
-    displayComment(newsContent.comments)
-  );
+  render() {
+    const id = location.hash.replace("#/news/", "");
+    const api = new NewsDetailApi(NEWS_CONTENT_URL.replace("@id", id));
+    const newsContent = api.getData();
 
-  updateView(template);
-};
+    store.feeds.forEach((feeds) => {
+      if (feeds.id === Number(id)) {
+        feeds.read = true;
+      }
+    });
 
-const displayComment = (comments: NewsComments[]) => {
-  const commentList: string[] = [];
+    this.setTemplateData("comments", this.displayComment(newsContent.comments));
+    this.setTemplateData("currentPage", store.currentPage.toString());
+    this.setTemplateData("title", newsContent.title);
+    this.setTemplateData("content", newsContent.content);
 
-  comments.forEach(({ user, time_ago, content, comments, level }) => {
-    commentList.push(`
-      <div style="padding-left: ${level * 40}px" class="mt-4">
-        <div class="text-gray-400">
-          <i class="fa fa-sort-up mr-2"></i>
-          <strong>${user}</strong> ${time_ago}
-        </div>
-        <p class="text-gray-700 break-all">${content}</p>
-      </div>  
-      `);
+    this.updateView();
+  }
 
-    if (comments.length > 0) {
-      commentList.push(displayComment(comments));
-    }
-  });
+  displayComment(comments: NewsComments[]) {
+    comments.forEach(({ user, time_ago, content, comments, level }) => {
+      this.addHtml(`
+        <div style="padding-left: ${level * 40}px" class="mt-4">
+          <div class="text-gray-400">
+            <i class="fa fa-sort-up mr-2"></i>
+            <strong>${user}</strong> ${time_ago}
+          </div>
+          <p class="text-gray-700 break-all">${content}</p>
+        </div>  
+        `);
 
-  return commentList.join("");
-};
+      if (comments.length > 0) {
+        this.addHtml(this.displayComment(comments));
+      }
+    });
+
+    return this.getHtml();
+  }
+}
 
 const router = () => {
   const currHashPath = location.hash;

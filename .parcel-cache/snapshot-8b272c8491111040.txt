@@ -1,14 +1,14 @@
 13
-52C:\Users\user\Desktop\project\hacker_news_clone\dist133679461866727563 1
+52C:\Users\user\Desktop\project\hacker_news_clone\dist133681194651831362 1
 65C:\Users\user\Desktop\project\hacker_news_clone\package-lock.json133667219073243477 0
 55C:\Users\user\Desktop\project\hacker_news_clone\hn.http133676780286855309 0
 58C:\Users\user\Desktop\project\hacker_news_clone\.gitignore133667225796457667 0
-54C:\Users\user\Desktop\project\hacker_news_clone\app.ts133679463323585337 0
+54C:\Users\user\Desktop\project\hacker_news_clone\app.ts133681194651671906 0
 58C:\Users\user\Desktop\project\hacker_news_clone\index.html133673194026408907 0
 60C:\Users\user\Desktop\project\hacker_news_clone\package.json133667219072705309 0
 61C:\Users\user\Desktop\project\hacker_news_clone\tsconfig.json133673194047307100 0
 70C:\Users\user\Desktop\project\hacker_news_clone\dist\index.5baa4167.js133673164175089417 0
 74C:\Users\user\Desktop\project\hacker_news_clone\dist\index.5baa4167.js.map133673164175129284 0
-63C:\Users\user\Desktop\project\hacker_news_clone\dist\index.html133673198875124770 0
-70C:\Users\user\Desktop\project\hacker_news_clone\dist\index.d5b4114f.js133679461866697834 0
-74C:\Users\user\Desktop\project\hacker_news_clone\dist\index.d5b4114f.js.map133679461866717601 0
+63C:\Users\user\Desktop\project\hacker_news_clone\dist\index.html133681161395827518 0
+70C:\Users\user\Desktop\project\hacker_news_clone\dist\index.d5b4114f.js133681194651811427 0
+74C:\Users\user\Desktop\project\hacker_news_clone\dist\index.d5b4114f.js.map133681194651821402 0
