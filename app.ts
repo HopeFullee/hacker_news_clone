@@ -32,6 +32,11 @@ interface NewsComments extends News {
   level: number;
 }
 
+interface RouteInfo {
+  path: string;
+  page: View;
+}
+
 const rootContainer = document.getElementById("root");
 const ajax = new XMLHttpRequest();
 const NEWS_URL = "https://api.hnpwa.com/v0/news/1.json";
@@ -71,11 +76,11 @@ class NewsDetailApi extends Api {
   }
 }
 
-class View {
-  template: string;
-  renderTemplate: string;
-  container: HTMLElement;
-  htmlList: string[];
+abstract class View {
+  private template: string;
+  private renderTemplate: string;
+  private container: HTMLElement;
+  private htmlList: string[];
 
   constructor(containerId: string, template: string) {
     const containerEl = document.getElementById(containerId);
@@ -88,32 +93,70 @@ class View {
     this.htmlList = [];
   }
 
-  updateView = () => {
+  protected updateView = () => {
     this.container.innerHTML = this.renderTemplate;
     this.renderTemplate = this.template;
   };
 
-  addHtml(htmlString: string) {
+  protected addHtml(htmlString: string) {
     this.htmlList.push(htmlString);
   }
 
-  getHtml() {
+  protected getHtml() {
     const snapshot = this.htmlList.join("");
     this.clearHtmlList();
     return snapshot;
   }
 
-  setTemplateData(key: string, val: string) {
+  protected setTemplateData(key: string, val: string) {
     this.renderTemplate = this.renderTemplate.replace(`{{__${key}__}}`, val);
   }
 
-  clearHtmlList() {
+  private clearHtmlList() {
     this.htmlList = [];
+  }
+
+  // 하위 자식 클래스가 필수적으로 구현 해야하는 함수 'abstract'
+  abstract render(): void;
+}
+
+class Router {
+  defaultRoute: RouteInfo | null;
+  routeTable: RouteInfo[];
+
+  constructor() {
+    window.addEventListener("hashchange", this.route.bind(this));
+
+    this.defaultRoute = null;
+    this.routeTable = [];
+  }
+
+  setDefaultPage(page: View) {
+    this.defaultRoute = { path: "", page };
+  }
+
+  addRoutePath(path: string, page: View) {
+    this.routeTable.push({ path, page });
+  }
+
+  route() {
+    const currHashPath = location.hash;
+
+    if (currHashPath === "" && this.defaultRoute) {
+      this.defaultRoute.page.render();
+    }
+
+    for (const routeInfo of this.routeTable) {
+      if (currHashPath.indexOf(routeInfo.path) >= 0) {
+        routeInfo.page.render();
+        break;
+      }
+    }
   }
 }
 
 class NewsFeedView extends View {
-  api: NewsFeedApi;
+  private api: NewsFeedApi;
 
   constructor(containerId: string) {
     let template = `
@@ -151,6 +194,8 @@ class NewsFeedView extends View {
   }
 
   render() {
+    store.currentPage = Number(location.hash.replace("#/page/", "") || 1);
+
     store.feeds.forEach(
       ({ id, title, user, points, time_ago, comments_count, read }, idx) => {
         if (
@@ -197,7 +242,7 @@ class NewsFeedView extends View {
     this.updateView();
   }
 
-  createFeeds = () => {
+  private createFeeds = () => {
     store.feeds.forEach((feeds) => {
       feeds.read = false;
     });
@@ -278,16 +323,12 @@ class NewsDetailView extends View {
   }
 }
 
-const router = () => {
-  const currHashPath = location.hash;
+const router: Router = new Router();
+const newsFeedView = new NewsFeedView("root");
+const newsDetailView = new NewsDetailView("root");
 
-  if (currHashPath === "") newsFeed();
-  else if (currHashPath.indexOf("#/page/") >= 0) {
-    store.currentPage = Number(currHashPath.replace("#/page/", ""));
-    newsFeed();
-  } else newsDetail();
-};
+router.setDefaultPage(newsFeedView);
+router.addRoutePath("/page/", newsFeedView);
+router.addRoutePath("/news/", newsDetailView);
 
-window.addEventListener("hashchange", router);
-
-router();
+router.route();

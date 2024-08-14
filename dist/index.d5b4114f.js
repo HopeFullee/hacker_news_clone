@@ -641,6 +641,33 @@ class View {
         this.htmlList = [];
     }
 }
+class Router {
+    constructor(){
+        window.addEventListener("hashchange", this.route.bind(this));
+        this.defaultRoute = null;
+        this.routeTable = [];
+    }
+    setDefaultPage(page) {
+        this.defaultRoute = {
+            path: "",
+            page
+        };
+    }
+    addRoutePath(path, page) {
+        this.routeTable.push({
+            path,
+            page
+        });
+    }
+    route() {
+        const currHashPath = location.hash;
+        if (currHashPath === "" && this.defaultRoute) this.defaultRoute.page.render();
+        for (const routeInfo of this.routeTable)if (currHashPath.indexOf(routeInfo.path) >= 0) {
+            routeInfo.page.render();
+            break;
+        }
+    }
+}
 class NewsFeedView extends View {
     constructor(containerId){
         let template = `
@@ -681,6 +708,7 @@ class NewsFeedView extends View {
         }
     }
     render() {
+        store.currentPage = Number(location.hash.replace("#/page/", "") || 1);
         store.feeds.forEach(({ id, title, user, points, time_ago, comments_count, read }, idx)=>{
             if (idx + 1 > (store.currentPage - 1) * 10 && idx < store.currentPage * 10) this.addHtml(`
           <div class="p-6 ${read ? "bg-green-500" : "bg-white"} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
@@ -767,16 +795,13 @@ class NewsDetailView extends View {
         return this.getHtml();
     }
 }
-const router = ()=>{
-    const currHashPath = location.hash;
-    if (currHashPath === "") newsFeed();
-    else if (currHashPath.indexOf("#/page/") >= 0) {
-        store.currentPage = Number(currHashPath.replace("#/page/", ""));
-        newsFeed();
-    } else newsDetail();
-};
-window.addEventListener("hashchange", router);
-router();
+const router = new Router();
+const newsFeedView = new NewsFeedView("root");
+const newsDetailView = new NewsDetailView("root");
+router.setDefaultPage(newsFeedView);
+router.addRoutePath("/page/", newsFeedView);
+router.addRoutePath("/news/", newsDetailView);
+router.route();
 
 },{}]},["5HnmO","2iQTb"], "2iQTb", "parcelRequire94c2")
 
