@@ -1,14 +1,28 @@
-13
-60C:\Users\user\Desktop\project\hacker_news_clone\package.json133667219072705309 0
+27
+76C:\Users\user\Desktop\project\hacker_news_clone\src\page\news-detail-view.ts133683691347061791 0
+63C:\Users\user\Desktop\project\hacker_news_clone\dist\index.html133683691438193966 0
 65C:\Users\user\Desktop\project\hacker_news_clone\package-lock.json133667219073243477 0
 55C:\Users\user\Desktop\project\hacker_news_clone\hn.http133676780286855309 0
+63C:\Users\user\Desktop\project\hacker_news_clone\src\core\api.ts133683683426072040 0
 58C:\Users\user\Desktop\project\hacker_news_clone\.gitignore133667225796457667 0
-54C:\Users\user\Desktop\project\hacker_news_clone\app.ts133681224468807324 0
-52C:\Users\user\Desktop\project\hacker_news_clone\dist133681221335864881 1
-58C:\Users\user\Desktop\project\hacker_news_clone\index.html133673194026408907 0
+58C:\Users\user\Desktop\project\hacker_news_clone\src\app.ts133683689779971227 0
+60C:\Users\user\Desktop\project\hacker_news_clone\package.json133667219072705309 0
+70C:\Users\user\Desktop\project\hacker_news_clone\dist\index.6b815632.js133683691438203937 0
+52C:\Users\user\Desktop\project\hacker_news_clone\dist133683691438233838 1
+74C:\Users\user\Desktop\project\hacker_news_clone\dist\index.6b815632.js.map133683691438223873 0
+58C:\Users\user\Desktop\project\hacker_news_clone\index.html133683677586258720 0
+74C:\Users\user\Desktop\project\hacker_news_clone\src\page\news-feed-view.ts133683689484440690 0
+51C:\Users\user\Desktop\project\hacker_news_clone\src133683679132411048 1
 61C:\Users\user\Desktop\project\hacker_news_clone\tsconfig.json133673194047307100 0
+61C:\Users\user\Desktop\project\hacker_news_clone\src\config.ts133683683182718552 0
+56C:\Users\user\Desktop\project\hacker_news_clone\src\core133683678428231447 1
+56C:\Users\user\Desktop\project\hacker_news_clone\src\page133683689005004691 1
+57C:\Users\user\Desktop\project\hacker_news_clone\src\types133683678733957354 1
+66C:\Users\user\Desktop\project\hacker_news_clone\src\types\index.ts133683688118425304 0
 70C:\Users\user\Desktop\project\hacker_news_clone\dist\index.5baa4167.js133673164175089417 0
+65C:\Users\user\Desktop\project\hacker_news_clone\src\page\index.ts133683689597836265 0
+66C:\Users\user\Desktop\project\hacker_news_clone\src\core\router.ts133683683709298570 0
+64C:\Users\user\Desktop\project\hacker_news_clone\src\core\view.ts133683682427600477 0
 74C:\Users\user\Desktop\project\hacker_news_clone\dist\index.5baa4167.js.map133673164175129284 0
-63C:\Users\user\Desktop\project\hacker_news_clone\dist\index.html133681195811020329 0
-70C:\Users\user\Desktop\project\hacker_news_clone\dist\index.d5b4114f.js133681221335844955 0
-74C:\Users\user\Desktop\project\hacker_news_clone\dist\index.d5b4114f.js.map133681221335864881 0
+70C:\Users\user\Desktop\project\hacker_news_clone\dist\index.d5b4114f.js133681250034571259 0
+74C:\Users\user\Desktop\project\hacker_news_clone\dist\index.d5b4114f.js.map133681250034581187 0
