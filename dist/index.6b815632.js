@@ -585,24 +585,21 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 
 },{}],"kuM8f":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "store", ()=>store);
 var _router = require("./core/router");
 var _routerDefault = parcelHelpers.interopDefault(_router);
 var _page = require("./page");
-const store = {
-    currentPage: 1,
-    feeds: []
-};
+var _store = require("./store");
+var _storeDefault = parcelHelpers.interopDefault(_store);
+const store = new (0, _storeDefault.default)();
 const router = new (0, _routerDefault.default)();
-const newsFeedView = new (0, _page.NewsFeedView)("root");
-const newsDetailView = new (0, _page.NewsDetailView)("root");
+const newsFeedView = new (0, _page.NewsFeedView)("root", store);
+const newsDetailView = new (0, _page.NewsDetailView)("root", store);
 router.setDefaultPage(newsFeedView);
 router.addRoutePath("/page/", newsFeedView);
 router.addRoutePath("/news/", newsDetailView);
 router.route();
 
-},{"./core/router":"f4hn2","./page":"4GSC5","@parcel/transformer-js/src/esmodule-helpers.js":"8jubI"}],"f4hn2":[function(require,module,exports) {
+},{"./core/router":"f4hn2","./page":"4GSC5","@parcel/transformer-js/src/esmodule-helpers.js":"8jubI","./store":"iLHNH"}],"f4hn2":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 class Router {
@@ -680,46 +677,44 @@ var _view = require("../core/view");
 var _viewDefault = parcelHelpers.interopDefault(_view);
 var _api = require("../core/api");
 var _config = require("../config");
-var _app = require("../app");
-class NewsDetailView extends (0, _viewDefault.default) {
-    constructor(containerId){
-        let template = `
-      <div class="bg-gray-600 min-h-screen pb-8">
-        <div class="bg-white text-xl">
-          <div class="mx-auto px-4">
-            <div class="flex justify-between items-center py-6">
-              <div class="flex justify-start">
-                <h1 class="font-extrabold">Hacker News</h1>
-              </div>
-              <div class="items-center justify-end">
-                <a href="#/page/{{__currentPage__}}" class="text-gray-500">
-                  <i class="fa fa-times"></i>
-                </a>
-              </div>
-            </div>
-          </div>
+const template = `
+<div class="bg-gray-600 min-h-screen pb-8">
+  <div class="bg-white text-xl">
+    <div class="mx-auto px-4">
+      <div class="flex justify-between items-center py-6">
+        <div class="flex justify-start">
+          <h1 class="font-extrabold">Hacker News</h1>
         </div>
-  
-        <div class="h-full border rounded-xl bg-white m-6 p-4 ">
-          <h2>{{__title__}}</h2>
-          <div class="text-gray-400 h-20">
-            {{__content__}}
-          </div>
-          {{__comments__}}
+        <div class="items-center justify-end">
+          <a href="#/page/{{__currentPage__}}" class="text-gray-500">
+            <i class="fa fa-times"></i>
+          </a>
         </div>
       </div>
-    `;
+    </div>
+  </div>
+
+  <div class="h-full border rounded-xl bg-white m-6 p-4 ">
+    <h2>{{__title__}}</h2>
+    <div class="text-gray-400 h-20">
+      {{__content__}}
+    </div>
+    {{__comments__}}
+  </div>
+</div>
+`;
+class NewsDetailView extends (0, _viewDefault.default) {
+    constructor(containerId, store){
         super(containerId, template);
+        this.store = store;
     }
     render() {
         const id = location.hash.replace("#/news/", "");
         const api = new (0, _api.NewsDetailApi)((0, _config.NEWS_CONTENT_URL).replace("@id", id));
         const newsContent = api.getData();
-        (0, _app.store).feeds.forEach((feeds)=>{
-            if (feeds.id === Number(id)) feeds.read = true;
-        });
+        this.store.makeRead(Number(id));
         this.setTemplateData("comments", this.displayComment(newsContent.comments));
-        this.setTemplateData("currentPage", (0, _app.store).currentPage.toString());
+        this.setTemplateData("currentPage", this.store.currentPage.toString());
         this.setTemplateData("title", newsContent.title);
         this.setTemplateData("content", newsContent.content);
         this.updateView();
@@ -741,7 +736,7 @@ class NewsDetailView extends (0, _viewDefault.default) {
     }
 }
 
-},{"../core/view":"gCNZN","../core/api":"5JfgJ","../config":"gTux2","../app":"kuM8f","@parcel/transformer-js/src/esmodule-helpers.js":"8jubI"}],"gCNZN":[function(require,module,exports) {
+},{"../core/view":"gCNZN","../core/api":"5JfgJ","../config":"gTux2","@parcel/transformer-js/src/esmodule-helpers.js":"8jubI"}],"gCNZN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 class View {
@@ -818,50 +813,41 @@ var _view = require("../core/view");
 var _viewDefault = parcelHelpers.interopDefault(_view);
 var _api = require("../core/api");
 var _config = require("../config");
-var _app = require("../app");
-class NewsFeedView extends (0, _viewDefault.default) {
-    constructor(containerId){
-        let template = `
-    <div class="bg-gray-600 min-h-screen">
-      <div class="bg-white text-xl">
-        <div class="mx-auto px-4">
-          <div class="flex justify-between items-center py-6">
-            <div class="flex justify-start">
-              <h1 class="font-extrabold">Hacker News</h1>
-            </div>
-            <div class="items-center justify-end">
-              <a href="#/page/{{__prev_page__}}" class="text-gray-500">
-                Previous
-              </a>
-              <a href="#/page/{{__next_page__}}" class="text-gray-500 ml-4">
-                Next
-              </a>
-            </div>
-          </div> 
-        </div>
-      </div>
-      <div class="p-4 text-2xl text-gray-700">
-        {{__news_feed__}}        
+const template = `
+  <div class="bg-gray-600 min-h-screen">
+    <div class="bg-white text-xl">
+      <div class="mx-auto px-4">
+        <div class="flex justify-between items-center py-6">
+          <div class="flex justify-start">
+            <h1 class="font-extrabold">Hacker News</h1>
+          </div>
+          <div class="items-center justify-end">
+            <a href="#/page/{{__prev_page__}}" class="text-gray-500">
+              Previous
+            </a>
+            <a href="#/page/{{__next_page__}}" class="text-gray-500 ml-4">
+              Next
+            </a>
+          </div>
+        </div> 
       </div>
     </div>
-  `;
+    <div class="p-4 text-2xl text-gray-700">
+      {{__news_feed__}}        
+    </div>
+  </div>
+`;
+class NewsFeedView extends (0, _viewDefault.default) {
+    constructor(containerId, store){
         super(containerId, template);
-        this.createFeeds = ()=>{
-            (0, _app.store).feeds.forEach((feeds)=>{
-                feeds.read = false;
-            });
-            return (0, _app.store).feeds;
-        };
+        this.store = store;
         this.api = new (0, _api.NewsFeedApi)((0, _config.NEWS_URL));
-        if ((0, _app.store).feeds.length === 0) {
-            (0, _app.store).feeds = this.api.getData();
-            this.createFeeds();
-        }
+        if (!this.store.hasFeeds) this.store.setFeeds(this.api.getData());
     }
     render() {
-        (0, _app.store).currentPage = Number(location.hash.replace("#/page/", "") || 1);
-        (0, _app.store).feeds.forEach(({ id, title, user, points, time_ago, comments_count, read }, idx)=>{
-            if (idx + 1 > ((0, _app.store).currentPage - 1) * 10 && idx < (0, _app.store).currentPage * 10) this.addHtml(`
+        this.store.currentPage = Number(location.hash.replace("#/page/", "") || 1);
+        this.store.getAllFeeds().forEach(({ id, title, user, points, time_ago, comments_count, read }, idx)=>{
+            if (idx + 1 > (this.store.currentPage - 1) * 10 && idx < this.store.currentPage * 10) this.addHtml(`
           <div class="p-6 ${read ? "bg-green-500" : "bg-white"} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
             <div class="flex">
               <div class="flex-auto">
@@ -882,12 +868,60 @@ class NewsFeedView extends (0, _viewDefault.default) {
         `);
         });
         this.setTemplateData("news_feed", this.getHtml());
-        this.setTemplateData("prev_page", ((0, _app.store).currentPage > 1 ? (0, _app.store).currentPage - 1 : 1).toString());
-        this.setTemplateData("next_page", ((0, _app.store).currentPage < (0, _app.store).feeds.length / 10 ? (0, _app.store).currentPage + 1 : (0, _app.store).feeds.length / 10).toString());
+        this.setTemplateData("prev_page", this.store.prevPage.toString());
+        this.setTemplateData("next_page", this.store.nextPage.toString());
         this.updateView();
     }
 }
 
-},{"../core/view":"gCNZN","../core/api":"5JfgJ","../config":"gTux2","../app":"kuM8f","@parcel/transformer-js/src/esmodule-helpers.js":"8jubI"}]},["6DWcY","kuM8f"], "kuM8f", "parcelRequire94c2")
+},{"../core/view":"gCNZN","../core/api":"5JfgJ","../config":"gTux2","@parcel/transformer-js/src/esmodule-helpers.js":"8jubI"}],"iLHNH":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+class Store {
+    constructor(){
+        this.feeds = [];
+        this._currentPage = 1;
+    }
+    get currentPage() {
+        return this._currentPage;
+    }
+    set currentPage(page) {
+        if (page <= 0) return;
+        this._currentPage = page;
+    }
+    get nextPage() {
+        return this._currentPage < this.feeds.length / 10 ? this.currentPage + 1 : this.feeds.length / 10;
+    }
+    get prevPage() {
+        return this._currentPage > 1 ? this._currentPage - 1 : 1;
+    }
+    get numberOfFeed() {
+        return this.feeds.length;
+    }
+    get hasFeeds() {
+        return this.feeds.length > 0;
+    }
+    getAllFeeds() {
+        return this.feeds;
+    }
+    getFeed(position) {
+        return this.feeds[position];
+    }
+    setFeeds(feeds) {
+        this.feeds = feeds.map((feed)=>{
+            return {
+                ...feed,
+                read: false
+            };
+        });
+    }
+    makeRead(id) {
+        const selectedFeed = this.feeds.find((feed)=>feed.id === id);
+        if (selectedFeed) selectedFeed.read = true;
+    }
+}
+exports.default = Store;
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"8jubI"}]},["6DWcY","kuM8f"], "kuM8f", "parcelRequire94c2")
 
 //# sourceMappingURL=index.6b815632.js.map

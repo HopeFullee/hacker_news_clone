@@ -1,15 +1,11 @@
-import { StoreType } from "./types";
 import Router from "./core/router";
 import { NewsDetailView, NewsFeedView } from "./page";
+import Store from "./store";
 
-export const store: StoreType = {
-  currentPage: 1,
-  feeds: [],
-};
-
+const store = new Store();
 const router: Router = new Router();
-const newsFeedView = new NewsFeedView("root");
-const newsDetailView = new NewsDetailView("root");
+const newsFeedView = new NewsFeedView("root", store);
+const newsDetailView = new NewsDetailView("root", store);
 
 router.setDefaultPage(newsFeedView);
 router.addRoutePath("/page/", newsFeedView);
